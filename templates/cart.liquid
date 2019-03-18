@@ -1,0 +1,197 @@
+<!-- /templates/cart.liquid -->
+{% comment %}
+
+  This is your /cart template. If you are using the Ajaxify Cart plugin,
+  your form (with action="/cart") layout will be used in the drawer/modal.
+
+  For info on test orders:
+    - General http://docs.shopify.com/manual/your-store/orders/test-orders
+    - Shopify Payments - http://docs.shopify.com/manual/more/shopify-payments/testing-shopify-payments
+
+{% endcomment %}
+{% if cart.item_count > 0 %}
+<div class="wrapper page-margin">
+  <form action="/cart" method="post" novalidate class="cart cartForm">
+    <h1 class="cart__title hidden-small">{{ 'cart.general.title' | t }}</h1>
+
+    <div class="cart__body">
+      <div class="cart__row cart__header-labels">
+        <div class="grid--full">
+          <div class="grid__item medium-up--one-half">
+            <a class="cart__exit" href="{{ settings.cart_continue_browsing | default: '/collections/all' }}">
+              <span class="icon-left">{% include 'icon-arrow-down' %}</span>
+              <span class="exit-text">{{ 'cart.general.continue_browsing_html' | t }}</span>
+            </a>
+          </div>
+          <div class="grid__item medium-up--one-half hidden-small">
+            <div class="grid--full">
+              <div class="grid__item one-third">
+                {{ 'cart.label.price' | t }}
+              </div>
+              <div class="grid__item one-third text-center">
+                {{ 'cart.label.quantity' | t }}
+              </div>
+              <div class="grid__item one-third text-right">
+                {{ 'cart.label.total' | t }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% comment %}
+        Loop through products in the cart
+      {% endcomment %}
+      {% for item in cart.items %}
+        <div class="cart__row" data-id="{{ item.id }}">
+          <div class="grid--full cart__row--table-large">
+
+            <div class="grid__item medium-up--one-half">
+              <div class="grid--full cart__row--table-large cart__description__wrapper">
+
+                <div class="grid__item one-third cart__image">
+                  <a href="{{ item.url | within: collections.all }}" class="">
+                    <img src="{{ item | img_url: '300x300' }}" alt="{{ item.title | escape }}">
+                  </a>
+                </div>
+
+                <div class="grid__item two-thirds cart__description">
+                  <a href="{{ item.url }}">
+                    <h4 class="h4--body cart__item__title">{{ item.product.title }}</h4>
+                  </a>
+                  <p class="hidden-medium-up">{{ item.price | money }}</p>
+                  {% unless item.product.has_only_default_variant %}
+                  {% assign variants_with_dots = item.variant.title | replace: "/", "<span class='color-border'>•</span>" %}
+                    <p><small>{{ variants_with_dots }}</small></p>
+                  {% endunless %}
+
+                  {% if settings.cart_vendor_enable %}
+                    <p>{{ item.vendor }}</p>
+                  {% endif %}
+
+                  {% assign property_size = item.properties | size %}
+                  {% if property_size > 0 %}
+                    {% for p in item.properties %}
+                      {% unless p.last == blank %}
+                        {{ p.first }}:
+
+                        {% comment %}
+                          Check if there was an uploaded file associated
+                        {% endcomment %}
+                        {% if p.last contains '/uploads/' %}
+                          <a href="{{ p.last }}">{{ p.last | split: '/' | last }}</a>
+                        {% else %}
+                          {{ p.last }}
+                        {% endif %}
+
+                        <br>
+                      {% endunless %}
+                    {% endfor %}
+                  {% endif %}
+
+                  <a href="/cart/change?line={{ forloop.index }}&amp;quantity=0" class="cart__remove btn btn--pill" data-id="{{ item.id }}">
+                    {% include 'icon-x-small' %}
+                    <small class="hidden-small">{{ 'cart.general.remove' | t }}</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid__item medium-up--one-half small--one-third" data-line-item>
+              <div class="grid--full cart__row--table-large">
+
+                <div class="grid__item one-third text-left hidden-small">
+                  <span class="h5--body money" data-line-price="{{ item.price }}">{{ item.price | money }}</span>
+                </div>
+
+                <div class="grid__item medium-up--one-third text-center">
+                  <div class="js-qty quantity-selector">
+                    <label for="updates_{{ item.key }}" class="label-hidden">{{ 'products.product.quantity' | t }}</label>
+                    <span class="js-qty__adjust js-qty__adjust--minus quantity__minus">{% include "icon-minus" %}</span>
+                    <input class="js-qty__num quantity__input" data-line-quantity
+                      type="text"
+                      value="{{ item.quantity }}"
+                      min="0"
+                      aria-label="quantity"
+                      pattern="[0-9]*"
+                      name="updates[]"
+                      id="updates_{{ item.key }}"
+                      aria-label="{{ 'cart.general.item_quantity' | t }}">
+                    <span class="js-qty__adjust js-qty__adjust--plus quantity__plus">{% include "icon-plus" %}</span>
+                  </div>
+                </div>
+                <div class="grid__item one-third text-right hidden-small">
+                  <span class="h5--body money" data-line-total>{{ item.line_price | money }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="cart__row cart__footer">
+      <div class="grid">
+        {% if settings.cart_notes_enable %}
+          <div class="grid__item medium-up--one-half cart__instructions">
+            <div class="form__field">
+              <label class="cart__instructions__label" for="CartSpecialInstructions">{{ 'cart.general.note' | t }}</label>
+              <textarea name="note" class="input-full" id="CartSpecialInstructions" placeholder="{{ 'cart.general.note' | t }}">{{ cart.note }}</textarea>
+            </div>
+          </div>
+        {% endif %}
+        <div class="grid__item text-right {% if settings.cart_notes_enable %} medium-up--one-half{% endif %}">
+          <p class="cart__footer__text">
+            <span class="cart__subtotal-title ">{{ 'cart.general.subtotal' | t }}</span>
+            <span class="h3--body cart__subtotal money" data-cart-total>{{ cart.total_price | money }}</span>
+          </p>
+          <p class="cart__footer__text"><em>{{ 'cart.general.shipping_at_checkout' | t }}</em></p>
+          <input type="submit" name="update" class="border-bottom-link cart__update" value="{{ 'cart.general.update' | t }}" data-update>
+          <input type="submit" name="checkout" class="btn  btn--large checkout__button" value="{{ 'cart.general.checkout' | t }}">
+        </div>
+      </div>
+    </div>
+    {% if additional_checkout_buttons and settings.cart_show_additional_buttons %}
+      <div class="grid__item additional-checkout-buttons">
+        {{ content_for_additional_checkout_buttons }}
+      </div>
+    {% endif %}
+  </form>
+</div>
+{% else %}
+  {% comment %}
+    The cart is empty
+  {% endcomment %}
+  <div class="cart__empty wrapper page-margin text-center">
+
+    <div class="supports-cookies">
+      <h1 class="h2 cart__title">{{ 'cart.general.title' | t }}</h1>
+      <p>{{ 'cart.general.empty' | t }}</p>
+      <a href="{{ settings.cart_continue_browsing | default: '/collections/all' }}" class="btn btn--large">{{ 'cart.general.continue_browsing_html' | t }}</a>
+    </div>
+
+    {% comment %}
+    Cart no cookies state
+    ---------------------
+    Browser cookies are required to use the cart. If cookies aren't enabled in the
+    browser a message is displayed prompting the user to enable them.
+    {% endcomment %}
+    <div class="supports-no-cookies">
+      <p>{{ 'cart.general.cookies_required' | t }}</p>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Global site tag (gtag.js) - AdWords. Created by FeedArmy.com -->
+<script>
+gtag('event', 'page_view', {
+'send_to': 'AW-774081166',
+	'ecomm_pagetype': 'cart',
+	{% if cart.item_count > 1 %}
+	'ecomm_prodid': [{% for item in cart.items %}'shopify_US_{{ item.product_id }}_{{ item.variant_id }}',{% endfor %}],
+	{% else %}
+	'ecomm_prodid': [{% for item in cart.items %}'shopify_US_{{ item.product_id }}_{{ item.variant_id }}'{% endfor %}],
+	{% endif %}
+	'ecomm_totalvalue': {{ cart.total_price | money_without_currency | remove:',' }}
+});
+</script>

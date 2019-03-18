@@ -1,0 +1,173 @@
+<!-- /sections/page-timeline.liquid-->
+
+{%- assign page_nav = linklists[section.settings.page_nav] -%}
+
+{%- assign page_nav_enable = false -%}
+{%- if page_nav.links.size > 0 -%}
+  {%- assign page_nav_enable = true -%}
+{%- endif -%}
+
+{% assign page_grid = 'one-whole' %}
+{% if page_nav_enable %}
+  {% assign page_grid = 'small--one-whole medium-up--three-quarters' %}
+{% endif %}
+
+
+<div class="wrapper page-margin">
+
+    {%- if section.settings.show_title -%}
+      {% include 'dots', direction: 'down' %}
+      <div class="title-decoration"></div>
+      <h1 class="title--decorated">{{ page.title }}</h1>
+    {%- endif -%}
+
+    <div class="grid">
+
+      {%- if page_nav_enable -%}
+
+      <div class="grid__item medium-up--hide">
+        <ul class="inline-nav">
+        {% for link in page_nav.links %}
+          <li {% if link.active %}class="inline-nav--active"{% endif %}>
+            <a href="{{ link.url }}">{{ link.title }}</a>
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+
+      <div class="grid__item medium-up--one-quarter">
+        <ul class="vertical-nav small--hide">
+          {% for link in page_nav.links %}
+            <li {% if link.active %}class="vertical-nav--active"{% endif %}>
+              <a href="{{ link.url }}">{{ link.title }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    {% endif %}
+
+    <div class="grid__item {{ page_grid }}">
+      <div class="rte">
+        {{ page.content }}
+      </div>
+    </div>
+  </div>
+
+  <div class="page--timeline grid">
+    <div class="grid__item medium--push-one-quarter medium--three-quarters large-up--one-half large-up--push-one-quarter">
+      <div class="timeline__wrapper">
+        {% for block in section.blocks %}
+          <div class="timeline__block" {{ block.shopify_attributes }}>
+
+            {% if block.settings.image != blank %}
+              {% assign img_url = block.settings.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' %}
+              <div class="timeline__image__wrapper">
+                <div class="background-size-cover lazyload" data-bgset="{% include 'bgset', image: block.settings.image %}"></div>
+                {%- if section.settings.zoom -%}
+                  <a data-zoomable class="zoom__link" href="#" data-mfp-src="{{  block.settings.image.src | img_url: 'master' }}">
+                    <span class="visually-hidden">{{ block.settings.image.alt | default: block.settings.title }}</span>
+                  </a>
+                {%- endif -%}
+                <noscript>
+                  <img src="{{ block.settings.image | img_url: '540x540', crop: 'center' }}" alt="{{ block.settings.image.alt | default: block.settings.title }}"/>
+                </noscript>
+              </div>
+            {% else %}
+              <div class="timeline__placemark"></div>
+            {% endif %}
+
+            {% if block.settings.date != blank %}
+              <p class="h6--number timeline__date">{{ block.settings.date | escape }}</p>
+            {% endif %}
+            {% if block.settings.title != blank %}
+              <h2 class="h4--body timeline__title">{{ block.settings.title | escape }}</h2>
+            {% endif %}
+            {% if block.settings.story != blank %}
+              <div class="rte timeline__story">{{ block.settings.story }}</div>
+            {% endif %}
+            {% if block.settings.link_text != blank and block.settings.link != blank %}
+              <a href="{{ block.settings.link }}" class="border-bottom-link">
+                {{ block.settings.link_text | escape }}
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Story page",
+    "settings": [
+      {
+        "type": "link_list",
+        "id": "page_nav",
+        "label": "Secondary page navigation",
+        "info": "This menu won't show dropdown items"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_title",
+        "label": "Show page title",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "zoom",
+        "label": "Enable image zoom",
+        "default": false
+      }
+    ],
+    "blocks": [
+      {
+        "type": "episode",
+        "name": "Timeline",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading",
+            "default": "Timeline episode"
+          },
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "Image"
+          },
+          {
+            "type": "text",
+            "id": "date",
+            "label": "Date",
+            "default": "January 2016"
+          },
+          {
+            "type": "richtext",
+            "id": "story",
+            "label": "Text",
+            "default": "<p>This tab content type will accept <strong>rich text</strong> to help with adding styles and links to additional pages or content. Use this to add supplementary information to help your buyers.</p>"
+          },
+          {
+            "type": "header",
+            "content": "Link"
+          },
+          {
+            "type": "text",
+            "id": "link_text",
+            "label": "Link text",
+            "default": "Continued..."
+          },
+          {
+            "type": "url",
+            "id": "link",
+            "label": "Link URL"
+          }
+        ]
+      }
+    ]
+  }
+
+
+  {% endschema %}

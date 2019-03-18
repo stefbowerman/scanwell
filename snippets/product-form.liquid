@@ -1,0 +1,105 @@
+<!-- /snippets/product-form.liquid -->
+
+<div {% unless current_variant.available %}class="variant--soldout"{% endunless %} data-form-wrapper>
+
+  <div class="product__title__wrapper">
+    <h1 class="product__title">{{ product.title }}</h1>
+    <div class="product__price h2--number" data-price-wrapper>
+      <span data-product-price>
+        {{ current_variant.price | money }}
+      </span>
+
+      {% if product.compare_at_price_max > product.price %}
+        <span class="visually-hidden" data-compare-text>{{ 'products.product.regular_price' | t }}</span>
+        <s class="on-sale" data-compare-price>
+          {% if current_variant.compare_at_price > current_variant.price %}
+            {{ current_variant.compare_at_price | money }}
+          {% endif %}
+        </s>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if section.settings.product_show_vendor and product.vendor %}
+    <p><a href="{{ product.vendor | url_for_vendor }}" class="border-bottom-link">{{ product.vendor }}</a></p>
+  {%- endif -%}
+
+
+  <div itemprop="offers" itemscope itemtype="http://schema.org/Offer" class="product__form">
+    <meta itemprop="priceCurrency" content="{{ shop.currency }}">
+    <meta itemprop="price" content="{{ current_variant.price | money_without_currency | strip_html }}">
+    <link itemprop="availability" href="http://schema.org/{% if current_variant.available %}InStock{% else %}OutOfStock{% endif %}">
+
+    {% form 'product', product %}
+      {% unless product.has_only_default_variant %}
+        <div class="product__selectors">
+          {% for option in product.options_with_values %}
+            <div class="selector-wrapper js">
+              <label for="SingleOptionSelector-{{ forloop.index0 }}">
+                {{ option.name }}
+              </label>
+
+              <select
+                id="SingleOptionSelector-{{ forloop.index0 }}"
+                data-single-option-selector
+                data-index="option{{ option.position }}">
+                {% for value in option.values %}
+                  <option
+                    value="{{ value | escape }}"
+                    {% if option.selected_value == value %}selected="selected"{% endif %}>
+                      {{ value }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endfor %}
+        </div>
+      {% endunless %}
+
+      <select name="id" class="no-js" data-product-select>
+        {% for variant in product.variants %}
+          <option
+            {% if variant == current_variant %}selected="selected"{% endif %}
+            {% unless variant.available %}disabled="disabled"{% endunless %}
+            value="{{ variant.id }}">
+              {{ variant.title }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <div class="product__submit {% if section.settings.enable_payment_button %}product__submit--spb{% endif %}">
+
+      <div class="js-qty quantity-selector">
+        <label for="Quantity" class="label-hidden" for="js-qty-{{ forloop.index0 }}">{{ 'products.product.quantity' | t }}</label>
+        <span class="js-qty__adjust js-qty__adjust--minus quantity__minus">{% include "icon-minus" %}</span>
+        <input type="text" id="js-qty-{{ forloop.index0 }}" class="js-qty__num quantity__input" value="1" min="1" aria-label="quantity" pattern="[0-9]*" name="quantity">
+        <span class="js-qty__adjust js-qty__adjust--plus quantity__plus">{% include "icon-plus" %}</span>
+      </div>
+      <div class="product__submit__buttons">
+        <button
+          type="submit"
+          name="add"
+          class="btn product__submit__add"
+          data-add-to-cart
+          {% unless current_variant.available %}disabled="disabled"{% endunless %}>
+            <span data-add-to-cart-text>
+              {% if current_variant.available %}
+                {{ 'products.product.add_to_cart' | t }}
+              {% else %}
+                {{ 'products.product.sold_out' | t }}
+              {% endif %}
+            </span>
+        </button>
+
+        {% if section.settings.enable_payment_button %}
+          {{ form | payment_button }}
+        {% endif %}
+
+      </div>
+    </div>
+
+    {% endform %}
+  </div>
+
+
+</div>
