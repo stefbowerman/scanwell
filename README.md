@@ -1,1 +1,1 @@
-# scanwell
+# Scanwell Health
