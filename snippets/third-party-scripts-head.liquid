@@ -1,0 +1,34 @@
+  <!-- Global site tag (gtag.js) - Google Ads: 774081166 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-774081166"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-774081166');
+</script>
+
+<!-- Pinterest Tag -->
+<script>
+  !function(e){if(!window.pintrk){window.pintrk = function () {
+  window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var
+    n=window.pintrk;n.queue=[],n.version="3.0";var
+    t=document.createElement("script");t.async=!0,t.src=e;var
+    r=document.getElementsByTagName("script")[0];
+    r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+  {% if customer %}
+  pintrk('load', '2613160337440', {em: '{{ customer.email }}'});
+  {% else %}
+  pintrk('load', '2613160337440');
+  {% endif %}
+  pintrk('page');
+</script>
+<noscript>
+  {% if customer %}
+    {% assign hashed_email = customer.email | remove: ' ' | strip_newlines | downcase | md5 %}
+    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&pd[em]={{ hashed_email }}&noscript=1" />
+  {% else %}
+    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=YOUR_TAG_ID&noscript=1" />  
+  {% endif %}
+</noscript>
+<!-- end Pinterest Tag -->

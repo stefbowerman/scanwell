@@ -8,16 +8,6 @@
   <meta name="theme-color" content="{{ settings.accent_cool }}">
   <link rel="canonical" href="{{ canonical_url }}">
   
-  <!-- Global site tag (gtag.js) - Google Ads: 774081166 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-774081166"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-774081166');
-</script>
-  
   <!-- ======================= Story Theme V1.0.2 ========================= -->
 
   {% if settings.favicon != blank %}
@@ -58,6 +48,13 @@
       moneyFormat: {{ shop.money_format | json }},
       version: '1.0.2'
     };
+
+    window.customer = {
+      {% if customer %}
+        id: {{ customer.id | json }},
+        email: {{ customer.email | json }}
+      {% endif %}
+    };
   </script>
 
   {% if template.directory == 'customers' %}
@@ -68,9 +65,9 @@
   <!--[if (gt IE 9)|!(IE)]><!--><script src="{{ 'theme.js' | asset_url }}" defer="defer"></script><!--<![endif]-->
   <!--[if lt IE 9]><script src="{{ 'theme.js' | asset_url }}"></script><![endif]-->
 
-
   {{ content_for_header }}
 
+  {% include 'third-party-scripts-head' %}
   {% include 'shogun-head' %}
 </head>
 
@@ -90,19 +87,7 @@
 
   <!-- End mailchimp ================================================== -->
 
-{% if template contains 'product' or template contains 'collection' or template contains 'index' or template contains 'search' %}
-<!-- Global site tag (gtag.js) - AdWords. Created by FeedArmy.com -->
-<script>
-  gtag('event', 'page_view', {
-    'send_to': 'AW-774081166',
-	'ecomm_pagetype': '{% if template contains 'collection' %}category{% elsif template contains 'product' %}product{% elsif template contains 'search' %}{% elsif template contains 'index' %}home{% endif %}',
-	{% if template contains 'product' %}
-	'ecomm_prodid': 'shopify_US_{{ product.id }}_{% if product.variants.first.id %}{{ product.variants.first.id }}',{% else %}{{ product.variants.id }}',{% endif %}
-	{% endif %}
-	{% if template contains 'product' %}'ecomm_totalvalue': {{ product.price_min | money_without_currency | remove:',' }}{% endif %}
-  });
-</script>
-{% endif %}
+  {% include 'third-party-scripts-foot' %}
   
 </body>
 </html>

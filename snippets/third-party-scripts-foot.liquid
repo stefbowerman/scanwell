@@ -1,0 +1,49 @@
+{% if template contains 'product' or template contains 'collection' or template contains 'index' or template contains 'search' %}
+
+  {% capture page_type %}
+    {% if template.name == 'collection' %}
+      category
+    {% elsif template.name == 'product' %}
+      product
+    {% elsif template.name == 'search' %}
+      search
+    {% elsif template.name == 'index' %}
+      home
+    {% endif %}
+  {% endcapture %}
+
+  <!-- Global site tag (gtag.js) - AdWords. Created by FeedArmy.com -->
+  <script>
+    gtag('event', 'page_view', {
+      'send_to': 'AW-774081166',
+      'ecomm_pagetype': {{ page_type | strip | json }}
+      {% if template contains 'product' %}
+      , 'ecomm_prodid': 'shopify_US_{{ product.id }}_{% if product.variants.first.id %}{{ product.variants.first.id }}'{% else %}{{ product.variants.id }}'{% endif %}
+      {% endif %}
+      {% if template contains 'product' %}, 'ecomm_totalvalue': {{ product.price_min | money_without_currency | remove:',' }}{% endif %}
+    });
+  </script>
+
+  {% if template.name == 'product' %}
+    <!-- Event snippet for View product conversion page -->
+    <script>
+      gtag('event', 'conversion', {'send_to': 'AW-774081166/VNOICN7v35YBEI6VjvEC'});
+    </script>
+
+    <script type="text/javascript">
+      gtag('event', 'view', {
+        'event_category': 'product',
+        'event_label': {{ product.id | json }}
+      });
+    </script>
+  {% endif %}
+
+  {% if template.name == 'search' and search.performed %}
+    <script type="text/javascript">
+      gtag('event', 'search', {
+        'event_category': 'search',
+        'event_label': {{ search.terms | json }}
+      });
+    </script>
+  {% endif %}
+{% endif %}

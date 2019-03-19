@@ -846,6 +846,7 @@ slate.Variants = (function() {
 theme.Product = (function() {
 
   var selectors = {
+    addForm: 'form[action="/cart/add"]',
     addToCart: '[data-add-to-cart]',
     addToCartText: '[data-add-to-cart-text]',
     comparePrice: '[data-compare-price]',
@@ -859,7 +860,8 @@ theme.Product = (function() {
     productJson: '[data-product-json]',
     productPrice: '[data-product-price]',
     productThumbs: '[data-product-thumbs]',
-    singleOptionSelector: '[data-single-option-selector]'
+    singleOptionSelector: '[data-single-option-selector]',
+    reviews: '#stamped-main-widget'
   };
 
   /**
@@ -905,12 +907,21 @@ theme.Product = (function() {
 
     this.settings = {};
     this.namespace = '.product';
+    this.addFormTracked = false; // Boolean so we know if the addform has been tracked on submit
     this.variants = new slate.Variants(options);
     this.$featuredImage = $(selectors.productFeaturedImage, this.$container);
+    this.$addForm = $(selectors.addForm, this.$container);
+    this.$reviews = $(selectors.reviews); // Reviews actually exist *outside* of the product section
+    this.reviewScrollInterval = false; // Instead of triggering stuff on scroll, just use a decent interval instead
 
     this.$container.on('variantChange' + this.namespace, this.updateAddToCartState.bind(this));
     this.$container.on('variantPriceChange' + this.namespace, this.updateProductPrices.bind(this));
     this.$container.on('variantImageChange' + this.namespace, this.updateProductImage.bind(this));
+    this.$addForm.on('submit' + this.namespace, this.onAddFormSubmit.bind(this));
+    
+    if(this.$reviews.length > 0) {
+      this.reviewScrollInterval = window.setInterval(this.reviewScrollCheck.bind(this), 500);
+    }
   }
 
   Product.prototype = $.extend({}, Product.prototype, {
@@ -996,7 +1007,18 @@ theme.Product = (function() {
       var swipeEnable = true;
       if ( this.zoomEnable && !Modernizr.touch ){ swipeEnable = false;}
 
-      $(selectors.productSlideshow, this.$container).slick({
+      var $productSlideshow = $(selectors.productSlideshow, this.$container);
+
+      $productSlideshow.on('afterChange', function(event, slick, currentSlide){
+        if (window.gtag) {
+          gtag('event', 'change_photo', {
+            'event_category': 'product',
+            'event_label': this.productSingleObject.images[currentSlide]
+          });
+        }
+      }.bind(this));
+
+      $productSlideshow.slick({
         adaptiveHeight: true,
         dots: true,
         fade: true,
@@ -1011,7 +1033,7 @@ theme.Product = (function() {
       });
 
       $(selectors.image, this.$container).imagesLoaded(function(){
-        $(selectors.productSlideshow, this.$container).slick('setPosition')
+        $productSlideshow.slick('setPosition')
       });
     },
     productImageZoom: function() {
@@ -1081,6 +1103,35 @@ theme.Product = (function() {
       } else {
         $('.product-tabs', this.$container).removeAttr( 'style' );
         $('.product-accordion', this.$container).hide();
+      }
+    },
+    onAddFormSubmit: function(e) {
+      var $form = this.$addForm;
+
+      if(this.addFormTracked == false && window.gtag) {
+        e.preventDefault();
+        gtag('event', 'add_to_cart', {
+          'event_category': 'product',
+          'event_label': this.productSingleObject.id,
+          'transport_type': 'beacon',
+          'event_callback': function() {
+            $form.submit();
+          }
+        });
+
+        this.addFormTracked = true;
+        return;
+      }
+    },
+    reviewScrollCheck: function() {
+      if((window.scrollY + window.innerHeight) > this.$reviews.offset().top) {
+        if (window.gtag) {
+          gtag('event', 'see_reviews', {
+            'event_category': 'product',
+            'event_label': this.productSingleObject.id
+          });
+        }        
+        window.clearInterval(this.reviewScrollInterval);  
       }
     },
     /**
@@ -1286,6 +1337,40 @@ theme.Collection = (function() {
   });
 
   return Collection;
+})();
+
+theme.Search = (function() {
+
+  var selectors = {
+    productLink: '[data-product-link]'
+  };
+
+  function Search(container) {
+    var $container = (this.$container = $(container));
+    console.log('search');
+
+    $container.on('click', selectors.productLink, function(e) {
+      var $link = $(e.currentTarget);
+      var url = $link.attr('href');
+      var productId = Number.parseInt($link.data('product-link'));
+
+      if(window.gtag) {
+        e.preventDefault();
+        gtag('event', 'select', {
+          'event_category': 'search',
+          'event_label': productId,
+          'transport_type': 'beacon',
+          'event_callback': function() { document.location = url; }
+        });
+      }
+    });
+  }
+
+  Search.prototype = $.extend({}, Search.prototype, {
+
+  });
+
+  return Search;
 })();
 
 theme.Map = (function() {
@@ -2362,6 +2447,7 @@ $(document).ready(function() {
   sections.register('banner', theme.Parallax);
   sections.register('index-collection', theme.IndexCollection);
   sections.register('collection', theme.Collection);
+  sections.register('search', theme.Search);
   sections.register('index-map', theme.Map);
   sections.register('index-timeline', theme.IndexTimeline);
   sections.register('instagram', theme.Instagram);
@@ -2402,4 +2488,82 @@ $(document).ready(function() {
   }
 
   if( window.AOS ){ AOS.init({ once: true }); }
+
+  // If gtag is available, do tracking
+  if(window.gtag) {
+
+    // General link click tracking
+    $(document).on('click', 'a', function(e) {
+      var $link = $(e.currentTarget);
+      var url = $link.attr('href');
+      var opensInSameWindow = $link.attr('target') !== '_blank';
+
+      // User is logging out
+      if(url == '/account/logout' && window.customer) {
+        gtag('event', 'logout', {
+          'event_category': 'user',
+          'event_label': window.customer.id,
+          'transport_type': 'beacon',
+          'event_callback': function() { document.location = url; }
+        });
+        return false;
+      }
+
+      // default prevented or internal link
+      if(e.isDefaultPrevented() || url.indexOf(location.host) > -1) {
+        return;
+      }
+
+      var cb = function() {
+        if(opensInSameWindow) {
+          document.location = url;
+        }
+      }
+
+      // It's a real outbound link
+      gtag('event', 'click', {
+        'event_category': 'outbound',
+        'event_label': url,
+        'transport_type': 'beacon',
+        'event_callback': cb
+      });
+
+      // Return false, we redirect in the callback
+      if(opensInSameWindow) {
+        return false;  
+      }
+    });
+
+    // Customer register form
+    $('#create_customer').one('submit', function() {
+      e.preventDefault();
+
+      var $form = $(e.currentTarget);
+
+      gtag('event', 'signup', {
+        'event_category': 'user',
+        'event_label': $form.find('[name="customer[email]"]').val()
+        'transport_type': 'beacon',
+        'event_callback': function() {
+          $form.submit();
+        }
+      });
+    });
+
+    // Customer contact form
+    $('#contact_form').one('submit', function(e) {
+      e.preventDefault();
+
+      var $form = $(e.currentTarget);
+
+      gtag('event', 'subscribe', {
+        'event_category': 'newsletter',
+        'event_label': 'location page', // this form only exists on the location page
+        'transport_type': 'beacon',
+        'event_callback': function() {
+          $form.submit();
+        }
+      });
+    });
+  }
 });
