@@ -1110,6 +1110,7 @@ theme.Product = (function() {
 
       if(this.addFormTracked == false && window.gtag) {
         e.preventDefault();
+
         gtag('event', 'add_to_cart', {
           'event_category': 'product',
           'event_label': this.productSingleObject.id,
@@ -1118,6 +1119,12 @@ theme.Product = (function() {
             $form.submit();
           }
         });
+
+        gtag('event', 'conversion', {'send_to': 'AW-774081166/b30UCOn635YBEI6VjvEC'});
+
+        fbq && fbq('track', 'AddToCart');
+
+        pintrk && pintrk('track', 'addtocart');
 
         this.addFormTracked = true;
         return;
@@ -2542,7 +2549,23 @@ $(document).ready(function() {
 
       gtag('event', 'signup', {
         'event_category': 'user',
-        'event_label': $form.find('[name="customer[email]"]').val()
+        'event_label': $form.find('[name="customer[email]"]').val(),
+        'transport_type': 'beacon',
+        'event_callback': function() {
+          $form.submit();
+        }
+      });
+    });
+
+    // Customer login form
+    $('#customer_login').one('submit', function() {
+      e.preventDefault();
+
+      var $form = $(e.currentTarget);
+
+      gtag('event', 'login', {
+        'event_category': 'user',
+        'event_label': $form.find('[name="customer[email]"]').val(),
         'transport_type': 'beacon',
         'event_callback': function() {
           $form.submit();
@@ -2564,6 +2587,10 @@ $(document).ready(function() {
           $form.submit();
         }
       });
+
+      fbq && fbq('track', 'Lead');
+
+      pintrk && pintrk('track', 'lead');
     });
   }
 });

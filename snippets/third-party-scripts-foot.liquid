@@ -36,6 +36,17 @@
         'event_label': {{ product.id | json }}
       });
     </script>
+
+    {% comment %} Facebook Event {% endcomment %}
+    <script>fbq && fbq('track', 'ViewContent');</script>
+
+    {% comment %} Pinterest Event {% endcomment %}
+    <script>
+      pintrk('track', 'pagevisit');
+    </script>
+    <noscript>
+      <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&event=pagevisit&noscript=1" />
+    </noscript>
   {% endif %}
 
   {% if template.name == 'search' and search.performed %}
