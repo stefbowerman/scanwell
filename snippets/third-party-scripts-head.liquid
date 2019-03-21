@@ -1,5 +1,8 @@
-  <!-- Global site tag (gtag.js) - Google Ads: 774081166 -->
+{% comment %}
+This is commented out because this library is being included via Shopify GA integration
+<!-- Global site tag (gtag.js) - Google Ads: 774081166 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-774081166"></script>
+{% endcomment %}
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -28,7 +31,7 @@
     {% assign hashed_email = customer.email | remove: ' ' | strip_newlines | downcase | md5 %}
     <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&pd[em]={{ hashed_email }}&noscript=1" />
   {% else %}
-    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=YOUR_TAG_ID&noscript=1" />  
+    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&noscript=1" />  
   {% endif %}
 </noscript>
 <!-- end Pinterest Tag -->

@@ -181,17 +181,3 @@
     </div>
   </div>
 {% endif %}
-
-<!-- Global site tag (gtag.js) - AdWords. Created by FeedArmy.com -->
-<script>
-gtag('event', 'page_view', {
-'send_to': 'AW-774081166',
-	'ecomm_pagetype': 'cart',
-	{% if cart.item_count > 1 %}
-	'ecomm_prodid': [{% for item in cart.items %}'shopify_US_{{ item.product_id }}_{{ item.variant_id }}',{% endfor %}],
-	{% else %}
-	'ecomm_prodid': [{% for item in cart.items %}'shopify_US_{{ item.product_id }}_{{ item.variant_id }}'{% endfor %}],
-	{% endif %}
-	'ecomm_totalvalue': {{ cart.total_price | money_without_currency | remove:',' }}
-});
-</script>

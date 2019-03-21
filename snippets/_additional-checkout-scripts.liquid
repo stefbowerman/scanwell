@@ -8,14 +8,51 @@
   gtag('config', 'AW-774081166');
 </script>
 
-{% if first_time_accessed %}
-<!-- Event snippet for Purchase from Shopify conversion page -->
+<!-- Pinterest Tag -->
 <script>
-  gtag('event', 'conversion', {
-      'send_to': 'AW-774081166/nyFqCMORipMBEI6VjvEC',
-      'value': {{ checkout.subtotal_price | money_without_currency }},
-      'currency': 'USD',
-      'transaction_id': '{{ order_number  }}'
-  });
+  !function(e){if(!window.pintrk){window.pintrk = function () {
+  window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var
+    n=window.pintrk;n.queue=[],n.version="3.0";var
+    t=document.createElement("script");t.async=!0,t.src=e;var
+    r=document.getElementsByTagName("script")[0];
+    r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+  {% if order.email != blank %}
+  pintrk('load', '2613160337440', {em: '{{ order.email }}'});
+  {% else %}
+  pintrk('load', '2613160337440');
+  {% endif %}
+  pintrk('page');
 </script>
+<noscript>
+  {% if order.email %}
+    {% assign hashed_email = order.email | remove: ' ' | strip_newlines | downcase | md5 %}
+    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&pd[em]={{ hashed_email }}&noscript=1" />
+  {% else %}
+    <img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?tid=2613160337440&noscript=1" />  
+  {% endif %}
+</noscript>
+<!-- end Pinterest Tag -->
+
+{% if first_time_accessed %}
+  <!-- Event snippet for Purchase from Shopify conversion page -->
+  <script>
+    gtag('event', 'conversion', {
+        'send_to': 'AW-774081166/nyFqCMORipMBEI6VjvEC',
+        'value': {{ checkout.subtotal_price | money_without_currency }},
+        'currency': 'USD',
+        'transaction_id': '{{ order_number }}'
+    });
+
+    gtag('event', 'purchase', {
+      'event_category': 'checkout',
+      'event_label': '{{ order_number }}',
+      'event_value': {{ checkout.subtotal_price | money_without_currency }}
+    });
+  </script>
+
+  <script type="text/javascript">
+    fbq && fbq('track', 'Purchase');
+
+    pintrk && pintrk('track', 'Purchase');
+  </script>
 {% endif %}
